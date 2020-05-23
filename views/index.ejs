@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clone Hero Queue Bot</title>
+</head>
+<body>
+    <h1>Song Queue</h1>
+    <% songList.forEach((song) => { %>
+        <h5>Requested by: <%= song.Requester %></h3>
+        <h4><%= song.SongId %> - <%= song.Artist %> - <%= song.Title %></h2>
+    <% }); %>
+</body>
+</html>
