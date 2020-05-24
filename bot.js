@@ -21,6 +21,8 @@ const runBot = () => {
     client.on('connected', onConnectedHandler);
     client.connect();
 
+    let currentSong = '';
+
     function onMessageHandler(channel, userState, msg, self){
         if (self){
             return;
@@ -40,7 +42,7 @@ const runBot = () => {
                 client.say(channel, 'Pong!');
                 break;
             case "!request":
-                if(checkOverRequestMax(userState)){
+                if(isOverRequestMax(userState)){
                     client.say(channel, `${userState['display-name']}, you have reached the maximum number of song requests. The limit is ${maxSongsPerSubscriber} for subscribers, or ${maxSongsPerUser} for others. You can request again when one of your songs is played`)
                 } else {
                     addSongToList(songId, userState['display-name']);
@@ -55,16 +57,24 @@ const runBot = () => {
             case '!queue':
                 sendNextQueue();
                 break;
-            case '!clearQueue':
-                if(userState['display-name'] == 'hessproject'){
+            case '!suggest':
+                suggestSong();
+                break;
+            //Owner only commands
+            case '!clearqueue':
+                if(isChannelOwner(userState)){
                     clearSongQueue();
                 }
                 break;
-            case '!playing':
-                if(userState['display-name'] == 'hessproject'){
+            case '!playid':
+                if(isChannelOwner(userState)){
                     playSong(songId);
                 }
                 break;
+            case '!playnext':
+                if(isChannelOwner(userState)){
+                    playNextSong();
+                }
             default:
                 console.log(`Unrecognized command : ${commandName}`);
 
@@ -166,6 +176,7 @@ const runBot = () => {
             })
 
             if(idx > -1){
+                currentSong = `${songQueue[idx].Title} by ${songQueue[idx].Artist}. Requested by: ${songQueue[idx].Requester}`
                 songQueue.splice(idx, 1);
                 console.log(`Found ${songId} in songQueue`);
             }
@@ -176,18 +187,57 @@ const runBot = () => {
                     return;
                 }
                 console.log(`Removed ${songId} from songQueue`);
-                client.say(channel, `Playing song ID ${songId} from the queue! Have fun!`)
+                client.say(channel, `Now Playing: ${currentSong}`)
             });
         })
     }
 
+    function playNextSong(){
+        fs.readFile('./data/songQueue.json', (err, data) =>{
+            if (err){
+                console.error('Error playing song: ', err);
+                return;
+            }
+
+            songQueue = JSON.parse(data);
+
+            if(songQueue.length > 0){
+                currentSong = `${songQueue[0].Title} by ${songQueue[0].Artist}. Requested by: ${songQueue[0].Requester}`
+                songQueue.splice(0, 1);
+            }
+
+            fs.writeFile('./data/songQueue.json', JSON.stringify(songQueue), (err) => {
+                if(err){
+                    console.error(err);
+                    return;
+                }
+                client.say(channel, `Now Playing: ${currentSong}`)
+            });
+        })
+    }
+
+    function suggestSong(){
+        fs.readFile('./data/songQueue.json', (err, data) => {
+            if (err){
+                console.error('Error loading songQueue: ', err);
+                return;
+            }
+
+            songQueue = JSON.parse(data);
+            randIdx = Math.random(0, songQueue.length);
+            suggestion = `You should play: ${songQueue[randIdx].Title} by ${songQueue[randIdx.Artist]}`;
+
+            client.say(channel, suggestion);
+        })
+    }
+
     //Helper Functions
-    function checkOverRequestMax(userState){
-        let isSubscriber = checkIsSubscriber(userState);
+    function isOverRequestMax(userState){
+        let isSubscribed = isSubscriber(userState);
 
         let count = getRequestCount(userState);
 
-        if((isSubscriber && count >= maxSongsPerSubscriber) || (!isSubscriber && count >= max)){
+        if((isSubscribed && count >= maxSongsPerSubscriber) || (!isSubscribed && count >= max)){
             return true;
         }
 
@@ -209,12 +259,16 @@ const runBot = () => {
         return count;
     }
 
-    function checkIsSubscriber(userState){
+    function isSubscriber(userState){
         if(userState['badges'].hasOwnProperty('subscriber')){
             return true;
         }
 
         return false;
+    }
+
+    function isChannelOwner(userState){
+        return userState['display-name'] == config.channels[0];
     }
 };
 
