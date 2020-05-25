@@ -13,7 +13,7 @@ const runBot = () => {
 
     //Bot Variables
     const maxSongsPerUser = 2;
-    const maxSongsPerSubscriber = 10;
+    const maxSongsPerSubscriber = 3;
     const channel = config.channels[0]
 
     const client = new tmi.client(config);
@@ -229,19 +229,9 @@ const runBot = () => {
     }
 
     function suggestSong(){
-        fs.readFile('./data/songsWithId.json', (err, data) => {
-            if (err){
-                console.error('Error loading songlist: ', err);
-                return;
-            }
-
-            let songList = JSON.parse(data);
-            let idx = Math.floor((Math.random() * songList.length) + 1);
-            console.log(idx);
-            let suggestion = `You should play: ${songList[idx].Name} by ${songList[idx].Artist}. Song Id: ${songList[idx].id}`;
-
-            client.say(channel, suggestion);
-        })
+        let idx = Math.floor((Math.random() * songList.length) + 1);
+        let suggestion = `You should play: ${songList[idx].Name} by ${songList[idx].Artist}. Song Id: ${songList[idx].id}`;
+        client.say(channel, suggestion);
     }
 
     /*********************
