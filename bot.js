@@ -75,6 +75,7 @@ const runBot = () => {
                 if(isChannelOwner(userState)){
                     playNextSong();
                 }
+                break;
             default:
                 console.log(`Unrecognized command : ${commandName}`);
 
@@ -204,28 +205,29 @@ const runBot = () => {
             if(songQueue.length > 0){
                 currentSong = `${songQueue[0].Title} by ${songQueue[0].Artist}. Requested by: ${songQueue[0].Requester}`
                 songQueue.splice(0, 1);
-            }
 
-            fs.writeFile('./data/songQueue.json', JSON.stringify(songQueue), (err) => {
-                if(err){
-                    console.error(err);
-                    return;
-                }
-                client.say(channel, `Now Playing: ${currentSong}`)
-            });
+                fs.writeFile('./data/songQueue.json', JSON.stringify(songQueue), (err) => {
+                    if(err){
+                        console.error(err);
+                        return;
+                    }
+                    client.say(channel, `Now Playing: ${currentSong}`)
+                });
+            }
         })
     }
 
     function suggestSong(){
-        fs.readFile('./data/songQueue.json', (err, data) => {
+        fs.readFile('./data/songsWithId.json', (err, data) => {
             if (err){
-                console.error('Error loading songQueue: ', err);
+                console.error('Error loading songlist: ', err);
                 return;
             }
 
-            songQueue = JSON.parse(data);
-            randIdx = Math.random(0, songQueue.length);
-            suggestion = `You should play: ${songQueue[randIdx].Title} by ${songQueue[randIdx.Artist]}`;
+            let songList = JSON.parse(data);
+            let idx = Math.floor((Math.random() * songList.length) + 1);
+            console.log(idx);
+            let suggestion = `You should play: ${songList[idx].Name} by ${songList[idx].Artist}`;
 
             client.say(channel, suggestion);
         })
@@ -268,7 +270,7 @@ const runBot = () => {
     }
 
     function isChannelOwner(userState){
-        return userState['display-name'] == config.channels[0];
+        return userState['display-name'] == config.channels[0].substr(1);
     }
 };
 
