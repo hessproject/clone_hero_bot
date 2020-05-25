@@ -13,7 +13,7 @@ const runBot = () => {
 
     //Bot Variables
     const maxSongsPerUser = 2;
-    const maxSongsPerSubscriber = 3;
+    const maxSongsPerSubscriber = 10;
     const channel = config.channels[0]
 
     const client = new tmi.client(config);
@@ -81,6 +81,10 @@ const runBot = () => {
                     playNextSong();
                 }
                 break;
+            case '!playrandom':
+                if(isChannelOwner(userState)){
+                    playRandomSong();
+                }
             default:
                 console.log(`Unrecognized command : ${commandName}`);
 
@@ -228,8 +232,26 @@ const runBot = () => {
         })
     }
 
+    function playRandomSong(){
+        fs.readFile('./data/songQueue.json', (err, data) => {
+            if (err){
+                console.error('Error reading queue: ', err);
+                return;
+            }
+            songQueue = JSON.parse(data);
+            
+            if(songQueue.length > 0){
+                let idx = Math.floor(Math.random() * songQueue.length);
+                client.say(channel, 'Selecting a random song from the queue')
+                playSong(songQueue[idx].SongId)
+            } else {
+                client.say(channel, 'No songs in the queue. Ask for a suggestion!');
+            }
+        })
+    }
+
     function suggestSong(){
-        let idx = Math.floor((Math.random() * songList.length) + 1);
+        let idx = Math.floor((Math.random() * songList.length));
         let suggestion = `You should play: ${songList[idx].Name} by ${songList[idx].Artist}. Song Id: ${songList[idx].id}`;
         client.say(channel, suggestion);
     }
@@ -242,10 +264,12 @@ const runBot = () => {
      *********************/
     function isOverRequestMax(userState){
         let isSubscribed = isSubscriber(userState);
-
         let count = getRequestCount(userState);
 
-        if((isSubscribed && count >= maxSongsPerSubscriber) || (!isSubscribed && count >= max)){
+        console.log(isSubscribed)
+        console.log(count)
+        console.log(maxSongsPerSubscriber)
+        if((isSubscribed && count >= maxSongsPerSubscriber) || (!isSubscribed && count >= maxSongsPerUser)){
             return true;
         }
 
