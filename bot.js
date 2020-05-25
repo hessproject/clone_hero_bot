@@ -23,6 +23,11 @@ const runBot = () => {
 
     let currentSong = '';
 
+    /************************
+     * 
+     * Message handler for chat
+     *
+     ************************/
     function onMessageHandler(channel, userState, msg, self){
         if (self){
             return;
@@ -86,7 +91,11 @@ const runBot = () => {
         console.log(`* Connected to ${addr}:${port}`);
     }
 
-    //Handlers for specific commands
+    /*************************
+     * 
+     * Command functions
+     * 
+    **************************/
     function sendRequestInstructions(){
         client.say(channel, `To request a song, get the id from the song list (use !songs to get list) and request with !request <songId>`)
     }
@@ -235,7 +244,12 @@ const runBot = () => {
         })
     }
 
-    //Helper Functions
+    /*********************
+     * 
+     * Helper 
+     * Functions
+     * 
+     *********************/
     function isOverRequestMax(userState){
         let isSubscribed = isSubscriber(userState);
 
