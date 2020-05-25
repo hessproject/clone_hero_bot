@@ -213,6 +213,8 @@ const runBot = () => {
                     }
                     client.say(channel, `Now Playing: ${currentSong}`)
                 });
+            } else {
+                client.say(channel, 'No songs in the queue. Ask for a suggestion!')
             }
         })
     }
