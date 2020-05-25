@@ -229,7 +229,7 @@ const runBot = () => {
             let songList = JSON.parse(data);
             let idx = Math.floor((Math.random() * songList.length) + 1);
             console.log(idx);
-            let suggestion = `You should play: ${songList[idx].Name} by ${songList[idx].Artist}`;
+            let suggestion = `You should play: ${songList[idx].Name} by ${songList[idx].Artist}. Song Id: ${songList[idx].id}`;
 
             client.say(channel, suggestion);
         })
